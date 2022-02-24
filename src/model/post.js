@@ -1,15 +1,6 @@
 import mongoose from 'mongoose';
 
 const postModel = {
-  author: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  username: {
-    type: String,
-    required: true,
-  },
   content: {
     type: String,
     required: true,
