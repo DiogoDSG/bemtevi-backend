@@ -1,5 +1,4 @@
 import Comment from '../model/comment.js';
-import Post from '../model/post.js';
 
 const createComment = async function (req, res) {
     const { user, post } = req
@@ -20,13 +19,23 @@ const createComment = async function (req, res) {
 };
 
 const removeComment = async function (req, res) {
-    const { user } = req
-    const { postId, commentId } = req.body
+    const { user, post } = req
+    const { commentId } = req.params
     try {
-        const post = Post.findById(postId)
-        
-        const comments = post.comments
-        res.status(200).send(comment);
+        const comment = await Comment.findById(commentId)
+        if (!comment) {
+          return res.status(404).json({ error: "Comment not found" })
+        }
+        if (!comment.post._id.equals(post._id)) {
+          return res.status(400).json({ error: "Comment and post do not match" })
+        }
+        if (!comment.owner._id.equals(user._id)) {
+          return res.status(403).json({ error: "Not allowed" })
+        }
+        await Comment.findByIdAndDelete(commentId)
+        post.comments.filter(comment => comment._id !== commentId)
+        await post.save()
+        res.status(204).send();
     } catch (error) {
         res.status(400).send({ error: error.message });
     }
@@ -36,10 +45,11 @@ const getAllPostComments = async function (req, res) {
   try {
     const { post } = req
     const comments = await Comment.find({ post: post._id })
-    //   .limit(req.query.limit || 20)
-    //   .sort({ createdAt: -1 })
-    //   .skip(req.query.skip || 0)
-      .populate('owner', 'post');
+      .limit(req.query.limit || 20)
+      .sort({ createdAt: -1 })
+      .skip(req.query.skip || 0)
+      .populate('owner')
+      .populate('post')
     if (!comments) res.status(404).json({ error: "The post requested has no comments!" });
 
     res.send(comments);
@@ -48,20 +58,8 @@ const getAllPostComments = async function (req, res) {
   }
 };
 
-
-const getPostsByUserId = async function (req, res) {
-  try {
-    const posts = await Post.find({ owner: req.params.id }).populate('owner');
-    if (!posts) return res.status(404).send();
-
-    res.send(posts);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send();
-  }
-};
-
 export default {
   createComment,
-  getAllPostComments
+  getAllPostComments,
+  removeComment
 };
