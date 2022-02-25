@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const schema = new mongoose.Schema(
+const commentModel = new mongoose.Schema(
   {
     message: { type: String, minlength: 1, maxlength: 256, required: true },
     owner: {
@@ -17,4 +17,8 @@ const schema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model('Comment', schema);
+const commentSchema = new mongoose.Schema(commentModel, { timestamps: true });
+
+const Comment = mongoose.model('Comment', commentSchema);
+
+export default Comment;

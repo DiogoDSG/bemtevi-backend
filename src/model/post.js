@@ -18,6 +18,12 @@ const postModel = {
       ref: 'User',
     },
   ],
+  comments: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Comment',
+    },
+  ]
 };
 
 const postSchema = new mongoose.Schema(postModel, { timestamps: true });
