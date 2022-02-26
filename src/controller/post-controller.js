@@ -1,4 +1,5 @@
 import Post from '../model/post.js';
+import { io } from '../socket.js';
 
 const createPost = async function (req, res) {
   try {
@@ -10,6 +11,7 @@ const createPost = async function (req, res) {
     });
     await post.save();
     res.status(200).send(post);
+    io.emit('createPost', await post.populate('owner'));
   } catch (error) {
     res.status(400).send({ error: error.message });
   }
@@ -49,6 +51,7 @@ const likePost = async function (req, res) {
     if (!post.likes.includes(req.user._id)) post.likes.push(req.user._id);
     await post.save();
     res.send(post);
+    io.emit('updatePostLike', post);
   } catch (error) {
     console.log(error);
     res.status(500).send();
@@ -62,6 +65,7 @@ const dislikePost = async function (req, res) {
     post.likes = post.likes.filter(id => !id.equals(req.user._id));
     await post.save();
     res.send(post);
+    io.emit('updatePostLike', post);
   } catch (error) {
     console.log(error);
     res.status(500).send();
