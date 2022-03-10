@@ -1,4 +1,5 @@
 import Comment from '../model/comment.js';
+import { CustomError } from "../errors/custom-error.js"
 
 const createComment = async function (req, res) {
     const { user, post } = req
@@ -20,24 +21,24 @@ const createComment = async function (req, res) {
 
 const removeComment = async function (req, res) {
     const { user, post } = req
-    const { commentId } = req.params
+    const { commentId } = req.body
     try {
         const comment = await Comment.findById(commentId)
         if (!comment) {
-          return res.status(404).json({ error: "Comment not found" })
+          throw new CustomError("Comment not found!", 404)
         }
         if (!comment.post._id.equals(post._id)) {
-          return res.status(400).json({ error: "Comment and post do not match" })
+          throw new CustomError("Comment and post do not match!", 400)
         }
         if (!comment.owner._id.equals(user._id)) {
-          return res.status(403).json({ error: "Not allowed" })
+          throw new CustomError("Not allowed!", 403)
         }
         await Comment.findByIdAndDelete(commentId)
         post.comments.filter(comment => comment._id !== commentId)
         await post.save()
         res.status(204).send();
     } catch (error) {
-        res.status(400).send({ error: error.message });
+        res.status(error.statusCode).send({ error: error.message });
     }
 };
 
@@ -49,12 +50,11 @@ const getAllPostComments = async function (req, res) {
       .sort({ createdAt: -1 })
       .skip(req.query.skip || 0)
       .populate('owner')
-      .populate('post')
-    if (!comments) res.status(404).json({ error: "The post requested has no comments!" });
+    if (!comments) throw new CustomError("The post requested has no comments!", 404)
 
     res.send(comments);
   } catch (error) {
-    res.status(400).send({ error: error.message });
+    res.status(error.statusCode).send({ error: error.message });
   }
 };
 
