@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  mongodb:
+    image: 'mongo'
+    volumes:
+      - bemtevi-data:/data/db
+  backend:
+    build: './'
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./:/app
+      - app/node_modules
+    depends_on:
+      - mongodb
+    env_file:
+      - './config/dev.env'
+
+volumes:
+  bemtevi-data:
